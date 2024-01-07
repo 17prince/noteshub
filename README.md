@@ -2,7 +2,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/17prince/noteshub">
-    <img src="frontend/images/trans_logo.png" alt="Logo" width="80" height="80">
+    <img src="frontend/images/white_logo.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">📝NotesHub📝</h3>
