@@ -10,10 +10,12 @@ const { createServer } = require("node:http");
 const { connectDatabase } = require("./dbConfig");
 const dotenv = require("dotenv");
 
-const { typeDefs, resolvers } = require("./schema/graphqlSchema");
+// GraphQL
+const { typeDefs } = require("./schema/graphqlSchema");
+const { resolvers } = require("./resolvers/index");
 const { context } = require("./context");
 
-dotenv.config({ path: `${__dirname}/../config.env` });
+dotenv.config({ path: `${__dirname}/config.env` });
 
 const DB_URI = process.env.DATABASE.replace(
   /<PASSWORD>/,
@@ -32,6 +34,7 @@ async function startServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    csrfPrevention : true,
     context: async ({ req }) => context(req),
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
@@ -43,7 +46,6 @@ async function startServer(typeDefs, resolvers) {
 
   server.applyMiddleware({
     app,
-
     // By default, apollo-server hosts its GraphQL endpoint at the
     // server root. However, *other* Apollo Server packages host it at
     // /graphql. Optionally provide this to match apollo-server.

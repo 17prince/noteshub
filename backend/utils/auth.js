@@ -3,10 +3,10 @@ const { promisify } = require("node:util");
 const User = require("../models/userModel");
 // const AppError = require("./appError");
 
-const JWT_SECRET = process.env.JWT_SECRET;
+let jwtSecret = "THIS_IS_A_GRAPHQL";
 
 const signToken = (id) =>
-  jwt.sign({ id }, JWT_SECRET, {
+  jwt.sign({ id }, jwtSecret, {
     algorithm: "HS256",
     expiresIn: "90d",
   });
@@ -15,7 +15,7 @@ const verifyToken = async (authHeader) => {
   const token = authHeader.split(" ")[1];
   let decoded;
   try {
-    decoded = await promisify(jwt.verify)(token, JWT_SECRET);
+    decoded = await promisify(jwt.verify)(token, jwtSecret);
   } catch (error) {
     throw error;
   }

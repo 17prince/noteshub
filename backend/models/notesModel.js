@@ -12,6 +12,11 @@ const noteSchema = new mongoose.Schema({
     type: Date,
     default: Date.now(),
   },
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Users",
+    required: [true, "Note must belong to a user."],
+  },
 });
 
 const Notes = mongoose.model("Notes", noteSchema);
