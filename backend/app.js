@@ -11,6 +11,7 @@ const { connectDatabase } = require("./dbConfig");
 const dotenv = require("dotenv");
 
 const { typeDefs, resolvers } = require("./schema/graphqlSchema");
+const { context } = require("./context");
 
 dotenv.config({ path: `${__dirname}/../config.env` });
 
@@ -31,6 +32,7 @@ async function startServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
+    context: async ({ req }) => context(req),
     plugins: [
       ApolloServerPluginDrainHttpServer({ httpServer }),
       ApolloServerPluginLandingPageLocalDefault({ embed: true }),
