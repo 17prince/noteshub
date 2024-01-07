@@ -1,14 +1,17 @@
 const express = require("express");
+const cors = require("cors");
 // // To integrate the graphql with eixsisting server, use apollo-server-express (or other dedicated package)
 // // and it creates an apollo server instance
-const { ApolloServer } = require("apollo-server-express");
+const { ApolloServer } = require("@apollo/server");
 const {
   ApolloServerPluginDrainHttpServer,
-  ApolloServerPluginLandingPageLocalDefault,
-} = require("apollo-server-core");
+} = require("@apollo/server/plugin/drainHttpServer");
+const { expressMiddleware } = require("@apollo/server/express4");
 const { createServer } = require("node:http");
-const { connectDatabase } = require("./dbConfig");
 const dotenv = require("dotenv");
+
+// Database
+const { connectDatabase } = require("./dbConfig");
 
 // GraphQL
 const { typeDefs } = require("./schema/graphqlSchema");
@@ -34,28 +37,24 @@ async function startServer(typeDefs, resolvers) {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    csrfPrevention : true,
-    context: async ({ req }) => context(req),
-    plugins: [
-      ApolloServerPluginDrainHttpServer({ httpServer }),
-      ApolloServerPluginLandingPageLocalDefault({ embed: true }),
-    ],
+    status400ForVariableCoercionErrors: true,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
   // Starting apollo server
   await server.start();
 
-  server.applyMiddleware({
-    app,
-    // By default, apollo-server hosts its GraphQL endpoint at the
-    // server root. However, *other* Apollo Server packages host it at
-    // /graphql. Optionally provide this to match apollo-server.
-    path: "/",
+  app.use(
+    "/",
+    cors(),
+    express.json(),
+    expressMiddleware(server, {
+      context: async ({ req }) => context(req),
+    })
+  );
+
+  httpServer.listen(4000, () => {
+    console.log(`🚀 Server ready at http://localhost:4000/`);
   });
-
-  // Modified server startup
-  await new Promise((resolve) => httpServer.listen({ port: 2001 }, resolve));
-
-  console.log(`🚀 Server ready at http://localhost:2001${server.graphqlPath}`);
 }
 
 startServer(typeDefs, resolvers);
