@@ -7,32 +7,25 @@ const {
   ApolloServerPluginLandingPageLocalDefault,
 } = require("apollo-server-core");
 const { createServer } = require("node:http");
+const { connectDatabase } = require("./dbConfig");
+const dotenv = require("dotenv");
 
-const notes = require("./sample/notes");
+const { typeDefs, resolvers } = require("./schema/graphqlSchema");
 
-// // Creating server using http
+dotenv.config({ path: `${__dirname}/../config.env` });
+
+const DB_URI = process.env.DATABASE.replace(
+  /<PASSWORD>/,
+  process.env.DATABASE_PASSWORD
+);
+
+// Connect to database
+connectDatabase(DB_URI);
 
 const app = express();
 
+// // Creating server using http
 const httpServer = createServer(app);
-const typeDefs = `
-type Note {
-    id : ID!,
-    title : String!, 
-    content : String, 
-    createdAt : String
-}
-
-type Query {
-    notes: [Note], 
-}
-`;
-
-const resolvers = {
-  Query: {
-    notes: () => notes,
-  },
-};
 
 async function startServer(typeDefs, resolvers) {
   const server = new ApolloServer({
