@@ -17,6 +17,7 @@ const { connectDatabase } = require("./dbConfig");
 const { typeDefs } = require("./schema/graphqlSchema");
 const { resolvers } = require("./resolvers/index");
 const { context } = require("./context");
+const errorHandler = require("./utils/errorHandler");
 
 dotenv.config({ path: `${__dirname}/config.env` });
 
@@ -39,6 +40,9 @@ async function startServer(typeDefs, resolvers) {
     resolvers,
     status400ForVariableCoercionErrors: true,
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    formatError: (formattedError, error) => {
+      return errorHandler(formattedError, error);
+    },
   });
   // Starting apollo server
   await server.start();

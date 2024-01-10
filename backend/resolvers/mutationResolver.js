@@ -1,6 +1,8 @@
 const Notes = require("../models/notesModel");
 const User = require("../models/userModel");
+const AppError = require("../utils/appError");
 const { signToken } = require("../utils/auth");
+const Email = require("../utils/email");
 
 exports.mutationResolver = {
   // Creates a new note
@@ -21,7 +23,7 @@ exports.mutationResolver = {
       $and: [{ _id: id }, { user: context.userId }],
     });
 
-    if (!note) return null;
+    if (!note) return new AppError("Document not found !", { code: "NO_DATA" });
 
     const updatedNote = await Notes.findByIdAndUpdate(id, fields, {
       new: true,
@@ -37,7 +39,7 @@ exports.mutationResolver = {
       $and: [{ _id: id }, { user: context.userId }],
     });
 
-    if (!note) return null;
+    if (!note) return new AppError("Document not found !", { code: "NO_DATA" });
 
     return context.userId ? await Notes.findByIdAndDelete(id) : null;
   },
@@ -57,6 +59,9 @@ exports.mutationResolver = {
     //   make password undefined
     user.password = undefined;
 
+    // Send Welcome email
+    await new Email(user).sendWelcome();
+
     return { token, user };
   },
 
@@ -64,9 +69,10 @@ exports.mutationResolver = {
     const user = await User.findOne({ email }).select("+password");
 
     //   Check if user exist and the entered password matchs
-
     if (!user || !user.checkPassword(password, user.password))
-      return { token: undefined, user: null };
+      return new AppError("Incorrect email/password. Or user not found", {
+        code: "IncorrectCredentials",
+      });
 
     //   assing token
     const token = signToken(user._id);

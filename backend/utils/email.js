@@ -6,7 +6,7 @@ class Email {
   constructor(user) {
     this.to = user.email;
     this.name = user.name;
-    this.from = `Noteszi,  <${process.env.EMAIL_FROM}`;
+    this.from = `NotesHub, <${process.env.EMAIL_FROM}>`;
   }
 
   newTransport() {
@@ -40,7 +40,7 @@ class Email {
   }
 
   async sendWelcome() {
-    await this.send("Welcome to Noteszi");
+    await this.send("Welcome to NotesHub");
   }
 }
 

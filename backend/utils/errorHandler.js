@@ -64,9 +64,24 @@ const handleURIConnectionError = () => {
     : new AppError("Invalid DB connection URI !", { code: "MongoParseError" });
 };
 
+// Handle castError
+const handleCastError = (args) => {
+  return new AppError("Cast to object faild for some value !", {
+    code: "CastError",
+    argumentName: args,
+  });
+};
+
+// Handle duplicate key error
+const handleDuplicateError = (key) => {
+  return new AppError("Duplicate key: Key aready exist.", {
+    code: "DUPLICATE_KEY_ERROR",
+    argumentName: key,
+  });
+};
 module.exports = (formattedError, error) => {
-  // console.log(unwrapResolverError(error).name);
   if (formattedError instanceof GraphQLError) {
+    console.log(formattedError);
     if (formattedError.extensions.code === "GRAPHQL_VALIDATION_FAILED")
       return handleValidationError(formattedError.extensions.stacktrace);
 
@@ -84,15 +99,19 @@ module.exports = (formattedError, error) => {
 
     return { ...formattedError };
   } else if (unwrapResolverError(error) instanceof Error) {
-    // console.log(error.originalError.name);
-    if (error.originalError.name === "TokenExpiredError")
-      return handleJWTExpiredError();
+    const err = error.originalError;
+    console.log(err);
+    if (err.name === "TokenExpiredError") return handleJWTExpiredError();
 
-    if (error.originalError.name === "JsonWebTokenError")
-      return handleJWTTokenError();
+    if (err.name === "JsonWebTokenError") return handleJWTTokenError();
 
-    if (error.originalError.name === "MongoParseError")
-      return handleURIConnectionError();
+    if (err.name === "MongoParseError") return handleURIConnectionError();
+
+    if (err.name === "CastError")
+      return handleCastError({ path: err.path, value: err.value });
+
+    if (err.name === "MongoServerError" && err.code === 11000)
+      return handleDuplicateError(err.keyValue);
 
     return error;
   }
